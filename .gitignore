@@ -1,0 +1,10 @@
+node_modules/
+.next/
+.env*
+!.env.example
+data/
+.vercel/
+*.tsbuildinfo
+ACESSO-LOCAL.txt
+ACESSOS-TESTE.txt
+test-results/

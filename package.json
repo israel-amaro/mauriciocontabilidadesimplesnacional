@@ -1,0 +1,36 @@
+{
+  "name": "mauricio-rocha-portal-simples",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --hostname 127.0.0.1",
+    "build": "next build",
+    "vercel-build": "node scripts/vercel-build.mjs",
+    "start": "next start --hostname 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "setup": "node scripts/setup.mjs",
+    "setup:test-users": "node scripts/setup-test-users.mjs",
+    "db:migrate": "node --env-file-if-exists=.env.local scripts/migrate.mjs",
+    "test": "node --env-file-if-exists=.env.local scripts/test-integration.mjs",
+    "test:integration": "node --env-file-if-exists=.env.local scripts/test-integration.mjs",
+    "test:roles": "node --env-file-if-exists=.env.local scripts/test-roles.mjs"
+  },
+  "dependencies": {
+    "next": "16.3.4",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "jose": "6.2.12",
+    "postgres": "3.4.9",
+    "lucide-react": "^0.577.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "@types/node": "^24.10.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0"
+  },
+  "engines": {
+    "node": "24.x"
+  }
+}

@@ -1,0 +1,2 @@
+'use client';
+export default function ErrorPage({reset}:{reset:()=>void}){return <main className="container privacy-page"><span className="eyebrow">VAMOS TENTAR DE NOVO</span><h1>Não conseguimos abrir esta página.</h1><p>Verifique a conexão e tente novamente. Se o problema persistir, entre em contato com o administrador.</p><button className="button" onClick={reset} style={{marginTop:25}}>Tentar novamente</button></main>;}
