@@ -13,7 +13,8 @@
     "db:migrate": "node --env-file-if-exists=.env.local scripts/migrate.mjs",
     "test": "node --env-file-if-exists=.env.local scripts/test-integration.mjs",
     "test:integration": "node --env-file-if-exists=.env.local scripts/test-integration.mjs",
-    "test:roles": "node --env-file-if-exists=.env.local scripts/test-roles.mjs"
+    "test:roles": "node --env-file-if-exists=.env.local scripts/test-roles.mjs",
+    "test:presentation": "node scripts/test-presentation.mjs"
   },
   "dependencies": {
     "next": "16.3.4",

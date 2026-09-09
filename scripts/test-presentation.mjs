@@ -1,0 +1,77 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { createRequire } from 'node:module';
+import ts from 'typescript';
+
+// Executa o adaptador real com armazenamento isolado. Não usa banco, rede ou dados do PC.
+const require=createRequire(import.meta.url);
+const storage=new Map();
+globalThis.localStorage={getItem:key=>storage.get(key)??null,setItem:(key,value)=>storage.set(key,value),removeItem:key=>storage.delete(key)};
+globalThis.fetch=()=>{throw new Error('A apresentação não deve fazer chamadas de rede.');};
+const cache=new Map();
+function load(file){
+  file=resolve(file);if(cache.has(file))return cache.get(file).exports;
+  const module={exports:{}};cache.set(file,module);
+  const compiled=ts.transpileModule(readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
+  new Function('require','module','exports',compiled)(id=>id.startsWith('.')?load(resolve(dirname(file),id+'.ts')):require(id),module,module.exports);
+  return module.exports;
+}
+let api=load('src/lib/presentation.ts').presentationFetch;
+const {presentationAccounts}=load('src/lib/presentation-data.ts');
+const clientId=presentationAccounts.find(a=>a.role==='client').leadId;
+let count=0;
+async function request(url,method='GET',body,status=200){const r=await api(url,{method,...(body?{body:JSON.stringify(body)}:{})});assert.equal(r.status,status,`${method} ${url}`);count++;return r.json();}
+const employee={email:'equipe.mr.portal.teste@gmail.com',password:'Equipe-MR-AsevgRYR'};
+const client={email:'cliente.mr.portal.teste@gmail.com',password:'Cliente-MR-4QaXeeGt'};
+await request('/api/leads','GET',null,401);
+await request('/api/auth','POST',{...employee,password:'incorreta'},401);
+assert.equal((await request('/api/auth','POST',employee)).redirect,'/admin');
+const initial=(await request('/api/leads')).leads;assert.equal(initial.length,9);
+await request('/api/client','GET',null,403);
+await request('/api/leads/'+clientId,'PATCH',{owner:'Equipe de relacionamento',note:'Nota interna restrita',priority:'Alta',nextContact:'2026-12-01'});
+await request('/api/leads/'+clientId,'PATCH',{proposal:{scope:'Contabilidade mensal personalizada',amount:850,notes:'Início a combinar'},status:'Em conversa'});
+await request('/api/leads/'+clientId,'PATCH',{status:'Inexistente'},400);
+await request('/api/leads/'+clientId,'POST',{},403);
+await request('/api/leads/'+clientId,'DELETE',null,403);
+await request('/api/leads/'+clientId+'/messages','POST',{text:'Vamos alinhar sua proposta?'});
+await request('/api/leads/'+clientId+'/messages','POST',{text:'Resposta fabricada',simulateIncoming:true},400);
+await request('/api/auth','DELETE');
+assert.equal((await request('/api/auth','POST',client)).redirect,'/cliente');
+let view=(await request('/api/client')).client;
+assert.equal(view.id,clientId);assert.equal(view.proposal,null);assert.ok(!('activities' in view));assert.ok(!('owner' in view));assert.ok(!('phone' in view));
+assert.ok(view.messages.some(m=>m.text==='Vamos alinhar sua proposta?'));
+await request('/api/leads','GET',null,403);
+await request('/api/leads/'+initial[0].id,'GET',null,403);
+await request('/api/leads/'+clientId,'PATCH',{status:'Cliente fechado'},403);
+await request('/api/settings','GET',null,403);
+await request('/api/client/messages','POST',{text:'Podemos conversar amanhã?'});
+await request('/api/client/messages','POST',{text:''},400);
+await request('/api/auth','DELETE');
+await request('/api/auth','POST',employee);
+const detail=(await request('/api/leads/'+clientId)).lead;
+assert.ok(detail.messages.some(m=>m.direction==='in'&&m.text==='Podemos conversar amanhã?'));
+assert.ok(detail.activities.some(a=>a.text==='Nota interna restrita'));
+await request('/api/leads/'+clientId,'PATCH',{status:'Proposta enviada'});
+await request('/api/auth','DELETE');
+await request('/api/auth','POST',client);
+view=(await request('/api/client')).client;assert.equal(view.proposal.amount,850);
+await request('/api/auth','DELETE');
+const submissionId=crypto.randomUUID();
+const input={submissionId,name:'Contato de Validação',company:'Empresa Validação',email:'validacao@example.com',phone:'27999999999',sector:'Serviços',revenue:'Até R$ 30 mil',regime:'Simples Nacional',challenge:'Trocar de contador',consent:true,source:'Instagram',campaign:'campanha-validacao'};
+await request('/api/leads','POST',{...input,consent:false},400);
+await request('/api/leads','POST',input,201);
+await request('/api/leads','POST',input,201);
+await request('/api/auth','POST',employee);
+// Recarregar os módulos preserva as alterações, como reabrir a página no mesmo navegador.
+cache.clear();api=load('src/lib/presentation.ts').presentationFetch;
+const records=(await request('/api/leads')).leads;assert.equal(records.length,10);
+assert.equal(records.find(l=>l.id===submissionId).campaign,'campanha-validacao');
+assert.equal(records.find(l=>l.id===clientId).proposal.amount,850);
+const key='mr-presentation-session-v1';const session=JSON.parse(storage.get(key));session.expires=Date.now()-1;storage.set(key,JSON.stringify(session));
+await request('/api/session','GET',null,401);
+await request('/api/auth','POST',employee);
+await request('/api/auth','DELETE');await request('/api/session','GET',null,401);
+globalThis.localStorage.getItem=()=>{throw new Error('Armazenamento bloqueado');};
+await request('/api/leads','POST',input,503);
+console.log(`${count} verificações aprovadas: perfis, cadastro, persistência, proposta, conversas e logout. Nenhuma chamada de rede.`);

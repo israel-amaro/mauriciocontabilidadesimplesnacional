@@ -1,144 +1,85 @@
 # Maurício Rocha · Portal Simples Nacional
 
-Site de captação com diagnóstico em três etapas e CRM privado. Projeto independente em Next.js 16, React 19 e TypeScript, preparado para GitHub e Vercel.
+Site de captação, CRM e área do cliente em Next.js, React e TypeScript. A configuração padrão publica na Vercel **sem banco de dados externo e sem variáveis obrigatórias**.
 
-## Abrir a demonstração no seu PC
+## Publicar agora na Vercel
 
-O projeto já está instalado e configurado nesta pasta. Para iniciar novamente:
+1. Importe o repositório `israel-amaro/mauriciocontabilidadesimplesnacional`.
+2. Use a raiz do repositório como Root Directory, framework Next.js e Node.js 24.x.
+3. Mantenha o build de `vercel.json`: `npm run vercel-build`.
+4. Publique. Se a publicação anterior falhou, faça uma nova publicação usando o commit mais recente de `main`.
+
+Não é necessário conectar Neon, Supabase ou WhatsApp. Sem `DATABASE_URL`/`POSTGRES_URL`, o build seleciona automaticamente o modo de apresentação. Se já houver variáveis de outro ambiente, defina `PORTAL_MODE=presentation` para selecionar explicitamente esse modo. Não envie `.env.local`, arquivos de acesso, `data/` ou `node_modules/` ao GitHub; o `.gitignore` já os exclui.
+
+## Acessos para a apresentação
+
+Abra `/admin/login`. São identificadores do portal; nenhuma conta Gmail foi criada e não é login com Google.
+
+| Perfil | E-mail | Senha de apresentação |
+| --- | --- | --- |
+| Funcionário | equipe.mr.portal.teste@gmail.com | Equipe-MR-AsevgRYR |
+| Cliente | cliente.mr.portal.teste@gmail.com | Cliente-MR-4QaXeeGt |
+
+Essas credenciais são públicas e exclusivas da apresentação. Não reutilize em sistemas reais.
+
+- Funcionário: CRM em `/admin`, com nove contatos sintéticos, busca, filtros, funil, histórico, próximos contatos e propostas.
+- Cliente: `/cliente`, acompanhamento da Horizonte Design, diagnóstico, proposta compartilhada e conversa com a equipe.
+- O botão **Sair** fica no canto superior direito. Saia antes de alternar o perfil.
+- A interface tem aparência final, sem faixas ou etiquetas de demonstração. Os contatos iniciais são sintéticos.
+
+## Como os dados funcionam nesta versão
+
+Os registros são gravados em `localStorage` **somente no navegador e no domínio em que você abriu o portal**. As alterações permanecem ao atualizar ou reabrir a página. Outro navegador, outro dispositivo, aba anônima ou outro endereço da Vercel tem seus próprios registros. Apagar os dados do site apaga as alterações e restaura os contatos iniciais na próxima abertura.
+
+O acesso por senha neste modo é apenas uma seleção de perfil para apresentação. Não constitui uma barreira de segurança: dados e credenciais de apresentação são distribuídos ao navegador. **Use somente dados fictícios; não use este modo para operar com clientes reais.** Os controles da interface mostram as áreas correspondentes a cada perfil, mas os dados do navegador podem ser inspecionados.
+
+As conversas são registros internos neste navegador, sem envio de WhatsApp, e-mail, notificações ou comunicação entre dispositivos. Não há respostas automáticas fabricadas. A captação via formulário também fica nesse navegador; não chega a uma equipe em outro dispositivo. Links externos do site institucional continuam abrindo o WhatsApp comercial quando escolhidos.
+
+## Roteiro de apresentação
+
+1. Mostre a página inicial com a identidade visual, serviços e fotos do escritório.
+2. Preencha o diagnóstico com dados fictícios. Confira o protocolo.
+3. Entre como funcionário, localize o novo contato e abra a ficha. Adicione uma nota, responsável e data de retorno.
+4. Arraste o cartão no funil ou altere a etapa dentro da ficha.
+5. Abra **Horizonte Design**, edite e salve a proposta. A proposta aparece na área do cliente quando a etapa é **Proposta enviada** ou **Cliente fechado**. Outras etapas mantêm o rascunho restrito à vista da equipe.
+6. Registre uma mensagem nessa ficha. Use **Sair**, entre como cliente no mesmo navegador e confira a proposta e a conversa. Registre uma resposta.
+7. Saia e entre novamente como funcionário para consultar a resposta. As telas também atualizam o histórico periodicamente.
+8. Mostre a exportação CSV, impressão/PDF da proposta e o gerador de links de campanha. O formulário registra a origem e a campanha localmente.
+
+## Rodar no PC
 
 ```powershell
+npm ci
 npm run dev
 ```
 
-- Site: http://127.0.0.1:3000
-- Diagnóstico: http://127.0.0.1:3000/diagnostico
-- Administrador: http://127.0.0.1:3000/admin
-- **E-mail e senha exclusivos desta instalação estão em `ACESSO-LOCAL.txt`.**
-- O banco local fica em `data/portal.sqlite`. Os dados persistem ao recarregar e reiniciar o servidor.
-- Use Node.js 24. O banco SQLite local usa o módulo nativo do Node.
+Abra `http://127.0.0.1:3000`. Uma instalação sem `.env.local` já usa apresentação. Nesta máquina, `PORTAL_MODE=presentation` está definido no arquivo local para usar o mesmo comportamento da Vercel. Os antigos arquivos e banco local continuam preservados, mas não são usados pela interface nesse modo.
 
-Em outro computador, execute `npm ci`, `npm run setup` e `npm run dev`. O setup gera uma senha, seu hash e o segredo de sessão, sem sobrescrever uma configuração existente.
+## Operação real com servidor — configuração opcional
 
-## Roteiro para apresentar ao cliente
+O backend original continua disponível, mas não é necessário para a apresentação. Para operar com dados reais, é necessário configurar e validar esse ambiente separadamente.
 
-### Acessos de cliente e funcionário
+1. Defina `PORTAL_MODE=production`.
+2. Configure PostgreSQL em `DATABASE_URL` ou `POSTGRES_URL`.
+3. Gere credenciais exclusivas com `npm run setup` em ambiente separado e configure `ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH` e `AUTH_SECRET` na hospedagem. Nunca envie senhas administrativas ou segredos ao repositório.
+4. Para os perfis adicionais, configure `EMPLOYEE_EMAIL`, `EMPLOYEE_PASSWORD_HASH`, `CLIENT_EMAIL`, `CLIENT_PASSWORD_HASH` e `CLIENT_LEAD_ID`. O vínculo deve apontar a um lead do banco publicado; não é escolhido pelo cliente.
+5. Use `DEMO_ENABLED=false` para desativar a criação de dados sintéticos. Defina `APP_URL` para o endereço publicado.
+6. Publique. Nesse modo, `vercel-build` valida as variáveis, executa a migração de `db/schema.sql` e compila. O banco deve permitir criar as tabelas na primeira publicação.
 
-Abra `/admin/login` e use as credenciais de **ACESSOS-TESTE.txt**. O e-mail determina a área após a autenticação:
+Nesse backend, as sessões são assinadas, expiram em oito horas, usam cookie HttpOnly e são revogadas no banco ao sair. A senha usa scrypt. As permissões são verificadas no servidor; funcionários não excluem leads e clientes recebem apenas os campos previstos do registro vinculado. Não há sincronização automática dos registros de apresentação para o banco.
 
-- **Funcionário:** `equipe.mr.portal.teste@gmail.com` — CRM, leads, histórico, agenda e propostas. Exclusão definitiva exige o administrador original.
-- **Cliente:** `cliente.mr.portal.teste@gmail.com` — `/cliente`, com o próprio diagnóstico, andamento e proposta compartilhada. Não acessa outros contatos, notas internas ou APIs da equipe.
+Para usar o backend local SQLite, defina `PORTAL_MODE=production`, `LOCAL_DATABASE=true` e gere as credenciais com `npm run setup`. O arquivo fica em `data/portal.sqlite`. Não use `LOCAL_DATABASE=true` na Vercel.
 
-São identificadores fictícios do portal; nenhuma conta Gmail foi criada e não se trata de login com Google. Use **Sair** antes de alternar entre os perfis na mesma janela. O acesso administrador original em ACESSO-LOCAL.txt continua válido.
+### WhatsApp Business real
 
-Os acessos locais foram gerados com `npm run setup:test-users`, que preserva uma configuração existente. As senhas são exclusivas desta instalação e seus hashes ficam em `.env.local`. O comando também cria uma empresa fictícia com proposta para o cliente visualizar.
+O backend inclui envio de texto e webhook da API oficial. Exige `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN` e `WHATSAPP_API_VERSION`. Cadastre `/api/whatsapp/webhook` na Meta e assine os eventos de mensagens. O webhook verifica a assinatura HMAC SHA-256 e o ID do número.
 
-Para disponibilizar os perfis na Vercel, configure `EMPLOYEE_EMAIL`, `EMPLOYEE_PASSWORD_HASH`, `CLIENT_EMAIL`, `CLIENT_PASSWORD_HASH` e `CLIENT_LEAD_ID`. O último deve apontar para o ID de um lead existente **no banco PostgreSQL publicado**, escolhido pelo administrador; o banco local e seu registro não são enviados automaticamente. O cliente nunca escolhe ou altera seu próprio vínculo. A proposta só aparece quando a etapa é `Proposta enviada` ou `Cliente fechado`.
+Mensagens livres exigem a janela de atendimento iniciada pelo contato; o formulário não abre essa janela. Não há envio de templates aprovados nesta implementação. Mensagens de contatos com diagnóstico são associadas ao registro mais recente daquele telefone, com deduplicação pelo ID da Meta. Contatos sem diagnóstico não geram leads automaticamente. Mídias são indicadas pelo tipo, sem download. Não há disparo em massa, compra de listas ou publicação de anúncios.
 
-Validação específica de permissões: `npm run test:roles` (servidor local ativo). Foram aprovadas 23 verificações, incluindo tentativas de acessar outro cliente, ocultação de notas internas, bloqueio de alterações e revogação de sessão.
-
-### Apresentação do CRM
-
-1. Mostre a página inicial e entre em **Quero uma orientação**.
-2. Preencha as três etapas do diagnóstico com dados de teste. Ao enviar, aparece o protocolo e o botão para continuar a conversa no WhatsApp comercial.
-3. Abra `/admin` e faça login com as credenciais locais.
-4. Confira o diagnóstico recebido. Abra a ficha, adicione uma nota, defina o responsável e a data de retorno.
-5. Em **Funil de vendas**, arraste um cartão ou altere a etapa dentro da ficha. A alteração fica registrada no histórico.
-6. Na aba **Proposta**, escreva os serviços e valores. Salve, clique em **Visualizar** e use **Imprimir / salvar PDF**. Marque como enviada apenas depois de encaminhar ao cliente.
-7. Abra **Captação**, crie um link de campanha, preencha o diagnóstico por ele e confira a origem no CRM.
-8. Para mostrar conversas bidirecionais, abra um contato com a etiqueta **Exemplo**. As mensagens e a resposta simulada são fictícias e não fazem envios externos.
-
-Os oito exemplos existentes foram criados para apresentação. Em uma instalação vazia, **Configurações → Carregar demonstração** adiciona os exemplos quando `DEMO_ENABLED=true`. Dados reais e fictícios possuem identificação separada em cada registro. Exclua os exemplos individualmente antes da operação real ou use um banco novo com `DEMO_ENABLED=false`.
-
-## O que está implementado
-
-- Página responsiva, navegação por seções, FAQ e página de privacidade.
-- Diagnóstico com dados de contato, empresa, regime, faturamento e necessidade.
-- Validação no servidor, autorização de contato, antispam por campo oculto e limite de solicitações.
-- Protocolo por cadastro e proteção contra duplicação em reenvio da mesma submissão.
-- Login privado, senha com scrypt, sessão assinada de 8 horas e logout com revogação no banco.
-- CRM: indicadores, lista, busca, filtros, funil com arrastar e soltar, prioridade e responsável.
-- Agenda de retornos, notas e histórico de mudança de etapa.
-- Propostas privadas com visualização para impressão/PDF.
-- Exportação CSV dos leads filtrados, com proteção contra fórmulas em células.
-- Links com origem/campanha e contagem de leads e clientes por origem.
-- WhatsApp: abertura de conversa manual, integração oficial de mensagens de texto, webhook assinado, recebimento e atualização de status.
-- Banco SQLite local e adaptador PostgreSQL para a Vercel.
-
-Não há compra de listas, raspagem de contatos, disparo em massa, anúncio publicado ou contratação de tráfego. A prospecção desta entrega é a estrutura de captação qualificada: você divulga os links, recebe os diagnósticos e acompanha os contatos.
-
-## Publicar no GitHub e na Vercel
-
-### 1. Enviar o código
-
-Use **esta pasta** como raiz do repositório: a pasta que contém `package.json` e `vercel.json`. Se subir o diretório pai, selecione `portal-simples-nacional` como **Root Directory** na Vercel.
-
-O `.gitignore` já exclui `.env.local`, `ACESSO-LOCAL.txt`, `ACESSOS-TESTE.txt`, `data/`, `node_modules/` e `.next/`. Não selecione esses arquivos manualmente ao enviar pelo navegador do GitHub. O arquivo `.env.example` pode ser publicado; ele não contém credenciais.
-
-### 2. Conectar o banco na Vercel
-
-1. Importe o repositório como projeto Next.js na Vercel.
-2. Conecte um PostgreSQL, por exemplo pela integração Neon no Marketplace/Storage da Vercel.
-3. Disponibilize a conexão em `DATABASE_URL` (ou `POSTGRES_URL`). Use a conexão fornecida pelo provedor, mantendo seus parâmetros TLS.
-4. Configure as variáveis abaixo em **Settings → Environment Variables**, nos ambientes em que vai publicar.
-
-| Variável | Valor |
-| --- | --- |
-| `DATABASE_URL` | URL de conexão do PostgreSQL |
-| `ADMIN_EMAIL` | E-mail usado no login |
-| `ADMIN_PASSWORD_HASH` | Valor completo gerado em `.env.local`, no formato `salt:hash` |
-| `AUTH_SECRET` | Segredo aleatório de pelo menos 32 caracteres, gerado em `.env.local` |
-| `DEMO_ENABLED` | `true` para apresentar os exemplos; `false` para desativar sua criação |
-| `APP_URL` | URL pública completa quando conhecida, por exemplo `https://seu-projeto.vercel.app` |
-
-Você pode copiar os valores gerados localmente para uma demonstração privada e entrar com a mesma senha do arquivo de acesso. Para a operação real, gere uma credencial exclusiva e defina o e-mail da equipe.
-
-**Não configure `LOCAL_DATABASE=true` na Vercel.** A hospedagem exige PostgreSQL; o aplicativo não tenta salvar leads em arquivos temporários que seriam perdidos.
-
-### 3. Publicar
-
-- Framework: **Next.js**.
-- Node.js: **24.x**.
-- Build: definido automaticamente em `vercel.json` como `npm run vercel-build`.
-- Esse comando verifica as variáveis, prepara as tabelas PostgreSQL com a migração incluída e executa a compilação.
-- Se as variáveis estiverem faltando, a publicação falha com uma orientação explícita, evitando entregar um formulário sem armazenamento.
-- Depois de configurar ou alterar variáveis, faça **Redeploy**.
-- Abra `/admin` no endereço publicado. Carregue os exemplos em Configurações, se desejar; o banco local não é enviado para a Vercel.
-
-O banco deve permitir criação das tabelas na primeira publicação. Se preferir preparar antes, execute `npm run db:migrate` localmente com a URL do banco remoto em `.env.local`, e depois restaure a configuração local. **Não compartilhe essa URL.**
-
-Use projetos/bancos separados para uma prévia comercial e a operação real. As migrações deste primeiro esquema são idempotentes; alterações futuras de esquema devem ser versionadas, sem apagar dados existentes.
-
-Referências oficiais: [Next.js](https://nextjs.org/docs), [PostgreSQL na Vercel](https://vercel.com/docs/postgres).
-
-## Conectar o WhatsApp real
-
-A demonstração local já funciona sem credenciais da Meta. Para mensagens reais dentro do CRM, configure o WhatsApp Business Platform da contabilidade e as variáveis:
-
-| Variável | Conteúdo |
-| --- | --- |
-| `WHATSAPP_TOKEN` | Token de acesso com permissão `whatsapp_business_messaging` |
-| `WHATSAPP_PHONE_NUMBER_ID` | ID do número comercial na Meta, não o telefone com DDD |
-| `WHATSAPP_APP_SECRET` | Segredo do aplicativo Meta, usado para verificar a assinatura do webhook |
-| `WHATSAPP_VERIFY_TOKEN` | Segredo aleatório escolhido para a verificação inicial do webhook |
-| `WHATSAPP_API_VERSION` | Versão da Graph API disponível para sua conta; valor inicial `v25.0` |
-
-Na Meta, cadastre a URL pública `https://SEU-DOMINIO/api/whatsapp/webhook`, informe o mesmo verify token e assine os eventos `messages` do número/conta comercial. O endpoint GET responde ao desafio; o POST verifica `X-Hub-Signature-256` com HMAC SHA-256 e o ID do número.
-
-O cliente deve iniciar ou retomar a conversa para abrir a janela de 24 horas de mensagens livres. Fora dela, o painel orienta a continuar pelo WhatsApp; esta versão não implementa envio de templates aprovados. O formulário registra a autorização, mas isso por si só não abre a janela de atendimento da Meta.
-
-- Mensagens de texto de contatos existentes chegam à ficha do lead correspondente ao telefone e aparecem no painel, atualizado a cada 20 segundos.
-- Se houver mais de um diagnóstico com o mesmo telefone, a conversa é associada ao diagnóstico mais recente.
-- Contatos sem diagnóstico prévio são ignorados pelo CRM; não há criação automática de leads a partir de mensagens desconhecidas.
-- Anexos recebidos são identificados pelo tipo; a visualização de mídia é feita no WhatsApp.
-- Os eventos repetidos de mensagens recebidas são deduplicados pelo ID da Meta.
-- Em erro de rede durante o envio, o painel orienta conferir a conversa antes de reenviar, porque a confirmação pode ter sido perdida após o envio.
-- A configuração aparecer como preenchida no painel não substitui uma verificação real da conta Meta.
-
-**Envio e recebimento reais dependem da conta, do número e dos tokens comerciais. Não foram testados contra a Meta nesta entrega.** Nenhuma mensagem foi enviada a pessoas durante o desenvolvimento.
-
-Referências: [API de mensagens oficial da Meta](https://www.postman.com/meta/whatsapp-business-platform/folder/o48mro7/messages), [Política de mensagens do WhatsApp](https://whatsappbusiness.com/policy/).
+PostgreSQL e a conta Meta não foram testados com serviços externos nesta entrega. O backend atende um administrador, um funcionário e um cliente configurados por ambiente. Uma operação com múltiplos clientes exige cadastro de usuários, convites, vínculos e infraestrutura adequados.
 
 ## Marca e conteúdo
+
 
 - Dados de contato e logotipo: `src/lib/brand.ts`.
 - Cores, fontes e layout: `src/app/globals.css`.
@@ -154,34 +95,22 @@ Referências: [API de mensagens oficial da Meta](https://www.postman.com/meta/wh
 ## Validação
 
 ```powershell
+npm run test:presentation
 npm run typecheck
-npm run build
-# Em outro terminal, com npm run dev ativo e a configuração local original:
-npm test
+npm run vercel-build
 ```
 
-Os testes de integração exercitam as rotas HTTP, cadastro, sessão, autorização, validações, mudanças concorrentes, proposta, exclusão e simulação. Usam apenas o banco local e recusam execução se houver conexão PostgreSQL. Os testes mantêm os exemplos fictícios para a apresentação e removem seu próprio lead temporário.
+O teste de apresentação executa o adaptador real com armazenamento isolado e rede bloqueada: 39 verificações de credenciais, perfis, cadastro, persistência, proposta, mensagens, validação e logout. Não modifica o armazenamento do navegador.
 
-- 34 verificações HTTP aprovadas na entrega inicial.
-- Compilação de produção e TypeScript aprovados.
-- Auditoria de dependências de produção: nenhuma vulnerabilidade reportada na verificação realizada.
-- Persistência local validada; PostgreSQL e publicação Vercel dependem das credenciais externas e não foram executados nesta máquina.
-- Não houve inspeção visual automatizada no navegador.
-- Um recurso WebMCP opcional e somente de leitura expõe os totais do CRM a navegadores compatíveis, usando a mesma autenticação. Não havia contexto de validação WebMCP disponível; esse recurso não foi verificado em um navegador compatível.
+Os testes HTTP do backend continuam em `npm run test:integration` e `npm run test:roles`, com servidor local ativo e configuração de backend SQLite. Eles foram aprovados na entrega inicial (34 verificações de integração e 23 de permissões). Não houve inspeção visual automatizada no navegador.
 
-## Estrutura principal
+## Arquivos principais
 
-```text
-src/app/                  Páginas e rotas HTTP
-src/components/           Site, diagnóstico, login e CRM
-src/lib/                  Marca, tipos, validações, banco, sessão e WhatsApp
-db/schema.sql             Esquema comum SQLite/PostgreSQL
-scripts/setup.mjs         Configuração e credenciais locais
-scripts/migrate.mjs       Preparação do banco PostgreSQL
-scripts/vercel-build.mjs  Preparação e compilação na Vercel
-scripts/test-integration.mjs  Validação HTTP local
-```
-
-## Limites desta primeira entrega
-
-Um administrador, um funcionário e um cliente configuráveis por ambiente, um número WhatsApp, texto simples e consulta de todos os leads em memória no servidor. Adequado à apresentação e a uma operação inicial pequena. Para escalar, evolua cadastro e convite de usuários, múltiplos clientes, paginação, busca e índices de leads, fila de mensagens, backups e monitoramento. A versão atual não inclui pagamentos, chatbot com IA ou emissão de documentos fiscais, conforme o escopo da proposta.
+- `src/lib/portal-mode.ts`: escolha entre apresentação e backend.
+- `src/lib/presentation.ts`: operações e persistência no navegador.
+- `src/lib/presentation-data.ts`: contatos e perfis sintéticos públicos.
+- `src/lib/portal-fetch.ts`: encaminhamento das operações da interface.
+- `src/components/`: site, CRM, área do cliente e propostas.
+- `src/app/api/`: backend opcional com autenticação e banco.
+- `scripts/vercel-build.mjs`: compilação nos dois modos.
+- `db/schema.sql`: esquema do backend opcional.

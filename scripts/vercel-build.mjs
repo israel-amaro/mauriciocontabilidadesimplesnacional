@@ -1,4 +1,10 @@
 import { spawnSync } from 'node:child_process';
+const presentation=process.env.PORTAL_MODE==='presentation'||(process.env.PORTAL_MODE!=='production'&&!process.env.DATABASE_URL&&!process.env.POSTGRES_URL);
+if(presentation){
+  console.log('Compilando portal para apresentação, sem serviços externos.');
+  const build=spawnSync(process.execPath,['node_modules/next/dist/bin/next','build'],{stdio:'inherit',env:{...process.env,PORTAL_MODE:'presentation'}});
+  process.exit(build.status??1);
+}
 const missing=['ADMIN_EMAIL','ADMIN_PASSWORD_HASH','AUTH_SECRET'].filter(k=>!process.env[k]);
 if(!process.env.DATABASE_URL&&!process.env.POSTGRES_URL)missing.push('DATABASE_URL');
 if(missing.length){console.error('Configure estas variáveis na Vercel antes de publicar: '+missing.join(', ')+'. Consulte README.md.');process.exit(1);}
